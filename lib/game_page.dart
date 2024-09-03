@@ -279,19 +279,59 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: Stack(
-        children: [
-          CustomPaint(
-            painter: BackgroundPainter(
-              color: currentColorScheme == CustomColorScheme.dark
-                  ? Colors.white
-                  : Color(0xFF776E65),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onPanStart: (details) {
+          _startPosition = details.localPosition;
+        },
+        onPanUpdate: (details) {
+          _endPosition = details.localPosition;
+        },
+        onPanEnd: (details) {
+          if (_startPosition != null && _endPosition != null) {
+            final dx = _endPosition!.dx - _startPosition!.dx;
+            final dy = _endPosition!.dy - _startPosition!.dy;
+
+            // 设置最小滑动距离阈值
+            const minSwipeDistance = 20.0;
+
+            if (dx.abs() > minSwipeDistance || dy.abs() > minSwipeDistance) {
+              if (dx.abs() > dy.abs()) {
+                // 水平滑动
+                if (dx > 0) {
+                  print('向右滑动');
+                  move(gameLogic.moveRight);
+                } else {
+                  print('向左滑动');
+                  move(gameLogic.moveLeft);
+                }
+              } else {
+                // 垂直滑动
+                if (dy > 0) {
+                  print('向下滑动');
+                  move(gameLogic.moveDown);
+                } else {
+                  print('向上滑动');
+                  move(gameLogic.moveUp);
+                }
+              }
+            }
+          }
+          // 重置起始和结束位置
+          _startPosition = null;
+          _endPosition = null;
+        },
+        child: Stack(
+          children: [
+            CustomPaint(
+              painter: BackgroundPainter(
+                color: currentColorScheme == CustomColorScheme.dark
+                    ? Colors.white
+                    : Color(0xFF776E65),
+              ),
+              size: Size.infinite,
             ),
-            size: Size.infinite,
-          ),
-          GestureDetector(
-            onTap: closeStartMenu,
-            child: Column(
+            Column(
               children: [
                 SafeArea(
                   child: Padding(
@@ -466,16 +506,16 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                 ),
               ],
             ),
-          ),
-          if (isStartMenuOpen)
-            StartMenu(
-              onColorSchemeChanged: (scheme) {
-                changeColorScheme(scheme);
-                closeStartMenu();
-              },
-              currentColorScheme: currentColorScheme,
-            ),
-        ],
+            if (isStartMenuOpen)
+              StartMenu(
+                onColorSchemeChanged: (scheme) {
+                  changeColorScheme(scheme);
+                  closeStartMenu();
+                },
+                currentColorScheme: currentColorScheme,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -640,3 +680,7 @@ class StartMenuItem extends StatelessWidget {
     );
   }
 }
+
+// 在类的顶部添加这两个变量
+Offset? _startPosition;
+Offset? _endPosition;
