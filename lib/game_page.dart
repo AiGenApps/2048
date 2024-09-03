@@ -299,19 +299,15 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
               if (dx.abs() > dy.abs()) {
                 // 水平滑动
                 if (dx > 0) {
-                  print('向右滑动');
                   move(gameLogic.moveRight);
                 } else {
-                  print('向左滑动');
                   move(gameLogic.moveLeft);
                 }
               } else {
                 // 垂直滑动
                 if (dy > 0) {
-                  print('向下滑动');
                   move(gameLogic.moveDown);
                 } else {
-                  print('向上滑动');
                   move(gameLogic.moveUp);
                 }
               }
