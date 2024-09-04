@@ -534,9 +534,15 @@ class TaskBar extends StatelessWidget {
       color: backgroundColor,
       child: Row(
         children: [
-          StartButton(onPressed: onStartButtonPressed),
+          Padding(
+            padding: EdgeInsets.only(left: 8),
+            child: StartButton(onPressed: onStartButtonPressed),
+          ),
           Expanded(child: Container()),
-          Clock(),
+          Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: Clock(),
+          ),
         ],
       ),
     );
@@ -554,13 +560,10 @@ class StartButton extends StatelessWidget {
       onTap: onPressed,
       child: Container(
         padding: EdgeInsets.all(8),
-        child: Text(
-          '2048',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+        child: Icon(
+          Icons.settings,
+          color: Colors.white,
+          size: 24,
         ),
       ),
     );
