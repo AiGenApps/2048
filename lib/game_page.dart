@@ -28,38 +28,43 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
 
   bool isStartMenuOpen = false;
   bool isAnimationEnabled = false;
-
-  void toggleStartMenu() {
-    setState(() {
-      isStartMenuOpen = !isStartMenuOpen;
-    });
-  }
-
-  void closeStartMenu() {
-    if (isStartMenuOpen) {
-      setState(() {
-        isStartMenuOpen = false;
-      });
-    }
-  }
+  bool isLoading = true; // 新增加载状态
 
   @override
   void initState() {
     super.initState();
-    gameLogic = GameLogic();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    gameLogic.addNewTile();
-    gameLogic.addNewTile();
+
+    // 初始化 gameLogic
+    gameLogic = GameLogic();
 
     // 加载保存的设置
-    _loadSettings();
+    _loadSettings().then((_) {
+      _initializeGame();
+      setState(() {
+        isLoading = false; // 加载完成
+      });
+    });
 
     // 确保焦点节点在初始化时请求焦点
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
+    });
+  }
+
+  void _initializeGame() {
+    setState(() {
+      gameLogic = GameLogic(); // 重新初始化 gameLogic
+      gameLogic.addNewTile();
+      gameLogic.addNewTile();
+      if (isAnimationEnabled) {
+        _controller.forward(from: 0.0);
+      } else {
+        _controller.value = 1.0;
+      }
     });
   }
 
@@ -140,12 +145,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
               child: const Text('重新开始'),
               onPressed: () {
                 Navigator.of(context).pop();
-                setState(() {
-                  gameLogic = GameLogic();
-                  isGameOverDialogShowing = false;
-                  gameLogic.addNewTile();
-                  gameLogic.addNewTile();
-                });
+                _initializeGame(); // 使用新的初始化方法
               },
             ),
           ],
@@ -310,8 +310,30 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     }
   }
 
+  void toggleStartMenu() {
+    setState(() {
+      isStartMenuOpen = !isStartMenuOpen;
+    });
+  }
+
+  void closeStartMenu() {
+    if (isStartMenuOpen) {
+      setState(() {
+        isStartMenuOpen = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: backgroundColor,
       body: GestureDetector(
@@ -432,11 +454,8 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                           decoration: neumorphicDecoration,
                           child: ElevatedButton(
                             onPressed: () {
-                              setState(() {
-                                gameLogic = GameLogic();
-                                gameLogic.addNewTile();
-                                gameLogic.addNewTile();
-                              });
+                              _initializeGame(); // 直接调用 _initializeGame 方法
+                              setState(() {}); // 确保UI更新
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: backgroundColor,
