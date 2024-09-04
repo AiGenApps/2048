@@ -82,7 +82,7 @@ class SettingMenu extends StatelessWidget {
                       style: TextStyle(color: Colors.white),
                     ),
                     Switch(
-                      value: isAnimationEnabled,
+                      value: isAnimationEnabled, // 这里使用传入的 isAnimationEnabled 值
                       onChanged: onAnimationToggled,
                       activeColor: Colors.deepPurple[300],
                     ),

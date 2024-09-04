@@ -6,6 +6,7 @@ class AnimatedTile extends StatelessWidget {
   final bool isNew;
   final Animation<double> animation;
   final CustomColorScheme colorScheme;
+  final bool isAnimationEnabled;
 
   const AnimatedTile({
     Key? key,
@@ -13,6 +14,7 @@ class AnimatedTile extends StatelessWidget {
     required this.isNew,
     required this.animation,
     required this.colorScheme,
+    required this.isAnimationEnabled,
   }) : super(key: key);
 
   @override
@@ -43,7 +45,7 @@ class AnimatedTile extends StatelessWidget {
           ),
           child: Center(
             child: ScaleTransition(
-              scale: isNew
+              scale: isNew && isAnimationEnabled
                   ? Tween<double>(begin: 0.0, end: 1.0).animate(
                       CurvedAnimation(
                         parent: animation,

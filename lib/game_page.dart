@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'tile.dart';
 import 'animated_tile.dart';
 import 'game_logic.dart';
@@ -26,7 +27,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   CustomColorScheme currentColorScheme = CustomColorScheme.light;
 
   bool isStartMenuOpen = false;
-  bool isAnimationEnabled = true;
+  bool isAnimationEnabled = false;
 
   void toggleStartMenu() {
     setState(() {
@@ -52,12 +53,31 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     );
     gameLogic.addNewTile();
     gameLogic.addNewTile();
-    _controller.forward();
+
+    // 加载保存的设置
+    _loadSettings();
 
     // 确保焦点节点在初始化时请求焦点
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
+  }
+
+  // 加载保存的设置
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      currentColorScheme =
+          CustomColorScheme.values[prefs.getInt('colorScheme') ?? 0];
+      isAnimationEnabled = prefs.getBool('isAnimationEnabled') ?? false;
+    });
+  }
+
+  // 保存设置
+  Future<void> _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('colorScheme', currentColorScheme.index);
+    await prefs.setBool('isAnimationEnabled', isAnimationEnabled);
   }
 
   @override
@@ -83,6 +103,8 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
       gameLogic.addNewTile();
       if (isAnimationEnabled) {
         _controller.forward(from: 0.0);
+      } else {
+        _controller.value = 1.0; // 立即设置动画到结束状态
       }
       setState(() {});
 
@@ -136,12 +158,14 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     setState(() {
       currentColorScheme = scheme;
       closeStartMenu();
+      _saveSettings(); // 保存设置
     });
   }
 
   void toggleAnimation(bool value) {
     setState(() {
       isAnimationEnabled = value;
+      _saveSettings(); // 保存设置
     });
   }
 
@@ -488,7 +512,9 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                                   final oldPosition =
                                       gameLogic.getOldPosition(tile);
                                   return AnimatedPositioned(
-                                    duration: const Duration(milliseconds: 200),
+                                    duration: isAnimationEnabled
+                                        ? const Duration(milliseconds: 200)
+                                        : Duration.zero,
                                     curve: Curves.easeInOut,
                                     left: tile.col * 75.0 + 2.5,
                                     top: tile.row * 75.0 + 2.5,
@@ -497,6 +523,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                                       isNew: tile.isNew,
                                       animation: _controller,
                                       colorScheme: currentColorScheme,
+                                      isAnimationEnabled: isAnimationEnabled,
                                     ),
                                   );
                                 }),
