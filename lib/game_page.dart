@@ -4,6 +4,7 @@ import 'tile.dart';
 import 'animated_tile.dart';
 import 'game_logic.dart';
 import 'background_painter.dart';
+import 'color_scheme_menu.dart';
 
 // 将 ColorScheme 重命名为 CustomColorScheme
 enum CustomColorScheme { light, dark, colorful }
@@ -25,6 +26,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   CustomColorScheme currentColorScheme = CustomColorScheme.light;
 
   bool isStartMenuOpen = false;
+  bool isAnimationEnabled = true;
 
   void toggleStartMenu() {
     setState(() {
@@ -78,8 +80,10 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
         oldScore != gameLogic.score || !_tilesEqual(oldTiles, newTiles);
 
     if (changed) {
-      gameLogic.addNewTile(); // 添加这一行来生成新的方块
-      _controller.forward(from: 0.0);
+      gameLogic.addNewTile();
+      if (isAnimationEnabled) {
+        _controller.forward(from: 0.0);
+      }
       setState(() {});
 
       if (gameLogic.isGameOver() && !isGameOverDialogShowing) {
@@ -131,6 +135,13 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   void changeColorScheme(CustomColorScheme scheme) {
     setState(() {
       currentColorScheme = scheme;
+      closeStartMenu();
+    });
+  }
+
+  void toggleAnimation(bool value) {
+    setState(() {
+      isAnimationEnabled = value;
     });
   }
 
@@ -196,13 +207,13 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
       boxShadow: [
         BoxShadow(
           color: shadowColor,
-          offset: Offset(4, 4),
+          offset: const Offset(4, 4),
           blurRadius: 15,
           spreadRadius: 1,
         ),
         BoxShadow(
           color: highlightColor,
-          offset: Offset(-4, -4),
+          offset: const Offset(-4, -4),
           blurRadius: 15,
           spreadRadius: 1,
         ),
@@ -217,13 +228,13 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
       boxShadow: [
         BoxShadow(
           color: boardShadowColor,
-          offset: Offset(4, 4),
+          offset: const Offset(4, 4),
           blurRadius: 15,
           spreadRadius: 1,
         ),
         BoxShadow(
           color: boardHighlightColor,
-          offset: Offset(-4, -4),
+          offset: const Offset(-4, -4),
           blurRadius: 15,
           spreadRadius: 1,
         ),
@@ -323,7 +334,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
               painter: BackgroundPainter(
                 color: currentColorScheme == CustomColorScheme.dark
                     ? Colors.white
-                    : Color(0xFF776E65),
+                    : const Color(0xFF776E65),
               ),
               size: Size.infinite,
             ),
@@ -338,11 +349,10 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Container(
-                              padding: EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(16),
                               decoration: neumorphicDecoration.copyWith(
-                                color:
-                                    logoBackgroundColor, // 使用 logoBackgroundColor
-                                gradient: LinearGradient(
+                                color: logoBackgroundColor,
+                                gradient: const LinearGradient(
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
@@ -351,7 +361,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                                   ],
                                 ),
                               ),
-                              child: Text(
+                              child: const Text(
                                 '2048',
                                 style: TextStyle(
                                   fontSize: 48,
@@ -360,7 +370,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                                   shadows: [
                                     Shadow(
                                       blurRadius: 10.0,
-                                      color: Colors.black.withOpacity(0.3),
+                                      color: Color(0x4D000000),
                                       offset: Offset(2.0, 2.0),
                                     ),
                                   ],
@@ -371,27 +381,29 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Container(
-                                  padding: EdgeInsets.all(8),
+                                  padding: const EdgeInsets.all(8),
                                   decoration: neumorphicDecoration,
                                   child: Text(
                                     '得分: ${gameLogic.score}',
-                                    style: TextStyle(color: Color(0xFF776E65)),
+                                    style: const TextStyle(
+                                        color: Color(0xFF776E65)),
                                   ),
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Container(
-                                  padding: EdgeInsets.all(8),
+                                  padding: const EdgeInsets.all(8),
                                   decoration: neumorphicDecoration,
                                   child: Text(
                                     '步数: ${gameLogic.steps}',
-                                    style: TextStyle(color: Color(0xFF776E65)),
+                                    style: const TextStyle(
+                                        color: Color(0xFF776E65)),
                                   ),
                                 ),
                               ],
                             ),
                           ],
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Container(
                           decoration: neumorphicDecoration,
                           child: ElevatedButton(
@@ -402,15 +414,15 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                                 gameLogic.addNewTile();
                               });
                             },
-                            child: Text('新游戏'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: backgroundColor,
-                              foregroundColor: Color(0xFF776E65),
+                              foregroundColor: const Color(0xFF776E65),
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15),
                               ),
                             ),
+                            child: const Text('新游戏'),
                           ),
                         ),
                       ],
@@ -418,11 +430,11 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                   ),
                 ),
                 Expanded(
-                  child: RawKeyboardListener(
+                  child: KeyboardListener(
                     focusNode: _focusNode,
                     autofocus: true,
-                    onKey: (RawKeyEvent event) {
-                      if (event is RawKeyDownEvent) {
+                    onKeyEvent: (KeyEvent event) {
+                      if (event is KeyDownEvent) {
                         switch (event.logicalKey) {
                           case LogicalKeyboardKey.arrowLeft:
                           case LogicalKeyboardKey.keyA:
@@ -447,7 +459,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                       child: Container(
                         width: 310,
                         height: 310,
-                        padding: EdgeInsets.all(5),
+                        padding: const EdgeInsets.all(5),
                         decoration: neumorphicBoardDecoration,
                         child: Center(
                           child: SizedBox(
@@ -503,12 +515,26 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
               ],
             ),
             if (isStartMenuOpen)
-              StartMenu(
-                onColorSchemeChanged: (scheme) {
-                  changeColorScheme(scheme);
-                  closeStartMenu();
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    isStartMenuOpen = false;
+                  });
                 },
-                currentColorScheme: currentColorScheme,
+                child: Container(
+                  color: Colors.transparent,
+                  child: SettingMenu(
+                    onColorSchemeChanged: changeColorScheme,
+                    currentColorScheme: currentColorScheme,
+                    isAnimationEnabled: isAnimationEnabled,
+                    onAnimationToggled: toggleAnimation,
+                    onClose: () {
+                      setState(() {
+                        isStartMenuOpen = false;
+                      });
+                    },
+                  ),
+                ),
               ),
           ],
         ),
@@ -535,11 +561,11 @@ class TaskBar extends StatelessWidget {
       child: Row(
         children: [
           Padding(
-            padding: EdgeInsets.only(left: 8),
+            padding: const EdgeInsets.only(left: 8),
             child: StartButton(onPressed: onStartButtonPressed),
           ),
-          Expanded(child: Container()),
-          Padding(
+          const Expanded(child: SizedBox()),
+          const Padding(
             padding: EdgeInsets.only(right: 8),
             child: Clock(),
           ),
@@ -559,8 +585,8 @@ class StartButton extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: EdgeInsets.all(8),
-        child: Icon(
+        padding: const EdgeInsets.all(8),
+        child: const Icon(
           Icons.settings,
           color: Colors.white,
           size: 24,
@@ -576,106 +602,13 @@ class Clock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: Stream.periodic(Duration(seconds: 1)),
+      stream: Stream.periodic(const Duration(seconds: 1)),
       builder: (context, snapshot) {
         return Text(
           '${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}:${DateTime.now().second.toString().padLeft(2, '0')}',
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         );
       },
-    );
-  }
-}
-
-class StartMenu extends StatelessWidget {
-  final Function(CustomColorScheme) onColorSchemeChanged;
-  final CustomColorScheme currentColorScheme;
-
-  const StartMenu({
-    Key? key,
-    required this.onColorSchemeChanged,
-    required this.currentColorScheme,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      left: 0,
-      bottom: 40,
-      child: GestureDetector(
-        onTap: () {},
-        child: Container(
-          width: 200,
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.8),
-            borderRadius: BorderRadius.only(
-              topRight: Radius.circular(8),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '配色方案',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-              SizedBox(height: 8),
-              StartMenuItem(
-                icon: Icons.brightness_5,
-                label: '浅色',
-                onTap: () => onColorSchemeChanged(CustomColorScheme.light),
-                color: Colors.grey[300]!,
-              ),
-              StartMenuItem(
-                icon: Icons.brightness_3,
-                label: '深色',
-                onTap: () => onColorSchemeChanged(CustomColorScheme.dark),
-                color: Colors.grey[800]!,
-              ),
-              StartMenuItem(
-                icon: Icons.color_lens,
-                label: '五彩',
-                onTap: () => onColorSchemeChanged(CustomColorScheme.colorful),
-                color: Colors.deepPurple[300]!,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class StartMenuItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final Color color;
-
-  const StartMenuItem({
-    Key? key,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.color,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Row(
-          children: [
-            Icon(icon, color: color),
-            SizedBox(width: 8),
-            Text(label, style: TextStyle(color: color)),
-          ],
-        ),
-      ),
     );
   }
 }
