@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"strconv"
 
@@ -32,6 +33,10 @@ func newGame() *Game {
 	g := &Game{
 		score:    0,
 		gameOver: false,
+		tiles:    make([][]*fyne.Container, boardSize),
+	}
+	for i := range g.tiles {
+		g.tiles[i] = make([]*fyne.Container, boardSize)
 	}
 	g.initBoard()
 	return g
@@ -41,6 +46,7 @@ func (g *Game) initBoard() {
 	g.board = [boardSize][boardSize]int{}
 	g.addRandomTile()
 	g.addRandomTile()
+	// 移除这里的 g.updateUI() 调用
 }
 
 func (g *Game) addRandomTile() {
@@ -59,6 +65,12 @@ func (g *Game) addRandomTile() {
 }
 
 func (g *Game) updateUI() {
+	if g.window == nil {
+		return // 如果窗口还未初始化，直接返回
+	}
+	gridSize := float32(math.Min(float64(g.window.Canvas().Size().Width), float64(g.window.Canvas().Size().Height-70)))
+	tileSize := gridSize / float32(boardSize)
+
 	for i := 0; i < boardSize; i++ {
 		for j := 0; j < boardSize; j++ {
 			value := g.board[i][j]
@@ -66,19 +78,22 @@ func (g *Game) updateUI() {
 			rect := container.Objects[0].(*canvas.Rectangle)
 			label := container.Objects[1].(*canvas.Text)
 
+			container.Resize(fyne.NewSize(tileSize, tileSize))
+			container.Move(fyne.NewPos(float32(j)*tileSize, float32(i)*tileSize))
+
 			if value == 0 {
 				label.Text = ""
 				rect.FillColor = color.RGBA{220, 220, 220, 255}
 			} else {
 				label.Text = strconv.Itoa(value)
 				rect.FillColor = getTileColor(value)
-				// 设置文本颜色
 				if value <= 4 {
-					label.Color = color.RGBA{119, 110, 101, 255} // 深棕色
+					label.Color = color.RGBA{119, 110, 101, 255}
 				} else {
-					label.Color = color.RGBA{249, 246, 242, 255} // 几乎白色
+					label.Color = color.RGBA{249, 246, 242, 255}
 				}
 			}
+			label.TextSize = tileSize / 3
 			label.Refresh()
 			rect.Refresh()
 		}
@@ -282,6 +297,41 @@ func (g *Game) resetGame() {
 	g.updateUI()
 }
 
+// 新增自定义布局
+type gameLayout struct {
+	grid        *fyne.Container
+	scoreLabel  *widget.Label
+	resetButton *widget.Button
+}
+
+func (g *gameLayout) Layout(objects []fyne.CanvasObject, size fyne.Size) {
+	padding := float32(10)
+	buttonHeight := float32(30)
+	labelHeight := float32(30)
+
+	// 计算可用于游戏网格的最大正方形尺寸
+	gridSize := float32(math.Min(float64(size.Width), float64(size.Height-labelHeight-buttonHeight-3*padding)))
+
+	// 计算垂直方向上的剩余空间
+	verticalSpace := size.Height - gridSize - labelHeight - buttonHeight - 3*padding
+
+	// 居中放置游戏网格
+	g.grid.Resize(fyne.NewSize(gridSize, gridSize))
+	g.grid.Move(fyne.NewPos((size.Width-gridSize)/2, labelHeight+padding+verticalSpace/2))
+
+	// 放置分数标签
+	g.scoreLabel.Resize(fyne.NewSize(size.Width, labelHeight))
+	g.scoreLabel.Move(fyne.NewPos(0, padding))
+
+	// 放置重置按钮
+	g.resetButton.Resize(fyne.NewSize(size.Width, buttonHeight))
+	g.resetButton.Move(fyne.NewPos(0, size.Height-buttonHeight-padding))
+}
+
+func (g *gameLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
+	return fyne.NewSize(300, 350)
+}
+
 func main() {
 	fmt.Println("hello")
 	a := app.New()
@@ -302,18 +352,13 @@ func main() {
 	})
 
 	grid := container.NewGridWithColumns(boardSize)
-	game.tiles = make([][]*fyne.Container, boardSize)
 
 	for i := 0; i < boardSize; i++ {
-		game.tiles[i] = make([]*fyne.Container, boardSize)
 		for j := 0; j < boardSize; j++ {
 			rect := canvas.NewRectangle(color.RGBA{220, 220, 220, 255})
-			rect.SetMinSize(fyne.NewSize(60, 60))
 
 			label := canvas.NewText("", color.Black)
 			label.Alignment = fyne.TextAlignCenter
-			label.TextStyle = fyne.TextStyle{Bold: true}
-			label.TextSize = 20
 
 			tile := container.NewMax(rect, label)
 			game.tiles[i][j] = tile
@@ -321,6 +366,18 @@ func main() {
 		}
 	}
 
+	customLayout := &gameLayout{
+		grid:        grid,
+		scoreLabel:  scoreLabel,
+		resetButton: resetButton,
+	}
+	content := container.New(customLayout, scoreLabel, grid, resetButton)
+
+	w.SetContent(content)
+	w.Resize(fyne.NewSize(400, 500))
+	w.SetFixedSize(false)
+
+	// 在设置窗口内容后更新UI
 	game.updateUI()
 
 	w.Canvas().SetOnTypedKey(func(k *fyne.KeyEvent) {
@@ -338,13 +395,5 @@ func main() {
 		}
 	})
 
-	content := container.NewVBox(
-		scoreLabel,
-		grid,
-		resetButton,
-	)
-
-	w.SetContent(content)
-	w.Resize(fyne.NewSize(300, 350))
 	w.ShowAndRun()
 }
