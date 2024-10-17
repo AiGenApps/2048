@@ -1,43 +1,28 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.buildlog/
-.history
-.svn/
-migrate_working_dir/
+# Go项目文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
+# 打包文件夹
 /build/
 
-# Symbolication related
-app.*.symbols
+# Go模块文件
+go.sum
 
-# Obfuscation related
-app.*.map.json
+# IDE和编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# Fyne特定文件
+fyne-cross/
